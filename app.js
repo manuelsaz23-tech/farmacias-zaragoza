@@ -75,9 +75,10 @@ function fit(){if(!state.map)return;const points=state.markers.map(o=>o.marker.g
 const MUNICIPAL='https://www.zaragoza.es/sede/servicio/farmacia.json';
 async function municipalFetch(mode,date){
  const began=performance.now();const all=[];const signatures=new Set();let total=null,pages=0;
- for(let n=0;n<10;n++){
+ for(let n=0;n<20;n++){
   const q=new URLSearchParams({srsname:'wgs84',rows:'200',start:String(all.length)});
-  if(mode!=='todas')q.set('tipo',mode);
+  // El servicio municipal requiere tipo=todas explícito; si se omite, devuelve guardias.
+  q.set('tipo',mode);
   if(mode==='guardia')q.set('fecha',isoToCity(date));
   const response=await fetch(MUNICIPAL+'?'+q,{mode:'cors',cache:'no-store',headers:{Accept:'application/json'}});
   if(!response.ok)throw new Error('La API municipal devuelve HTTP '+response.status);
@@ -88,9 +89,11 @@ async function municipalFetch(mode,date){
   if(signatures.has(fingerprint))break;
   signatures.add(fingerprint);all.push(...chunk);pages++;
   if(total!==null&&all.length>=total)break;
-  if(chunk.length<200)break;
+  if(total===null&&chunk.length<200)break;
  }
- const incomplete=pages>=10||(total!==null&&all.length<total);
+ const incomplete=pages>=20||(total!==null&&all.length<total);
+ // No confundir la respuesta de guardias (7-14 registros) con el directorio municipal.
+ if(mode==='todas'&&(incomplete||all.length<50))throw new Error('Directorio completo no verificado: se han recibido '+all.length+' registros (total declarado: '+(total??'desconocido')+'). No se mostrarán como «Todas».');
  return {origen:MUNICIPAL,fecha_consulta:new Date().toISOString(),datos:all,diagnostico:{paginas:pages,registros:all.length,total_origen:total,incompleto:incomplete,duracion_fuente_ms:Math.round(performance.now()-began)},cache:{origen:'red',edad_segundos:0}};
 }
 
@@ -129,7 +132,7 @@ function setMode(mode){state.mode=mode;document.querySelectorAll('[data-mode]').
 function initializeMap(){if(typeof L==='undefined'){$('map').innerHTML='<p class="empty">No se pudo cargar Leaflet. La lista, teléfonos y enlaces de navegación seguirán disponibles. Comprueba la conexión a Internet.</p>';$('mapstatus').textContent='Mapa no disponible';return}state.map=L.map('map',{zoomControl:true}).setView([41.6488,-0.8891],12);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(state.map);setTimeout(()=>state.map.invalidateSize(true),200);window.addEventListener('resize',()=>state.map.invalidateSize(true));}
 function geolocate(){if(!navigator.geolocation){setStatus('Este navegador no dispone de geolocalización.',true);return}setStatus('Solicitando permiso de ubicación…');navigator.geolocation.getCurrentPosition(p=>{state.position={lat:p.coords.latitude,lng:p.coords.longitude};if(state.map){if(state.userMarker)state.map.removeLayer(state.userMarker);state.userMarker=L.marker([state.position.lat,state.position.lng],{icon:L.divIcon({html:'<div class="user-pin"></div>',className:'',iconSize:[18,18]})}).addTo(state.map).bindPopup('Mi ubicación aproximada');}update();fit();setStatus('Ubicación obtenida. Resultados ordenados por distancia en línea recta; confirma horario antes de acudir.')},e=>setStatus('No se ha podido obtener la ubicación: '+e.message,true),{enableHighAccuracy:false,timeout:10000,maximumAge:300000})}
 els.date.value=todayISO();document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));$('hoy').addEventListener('click',()=>{els.date.value=todayISO();if(state.mode==='guardia')load()});$('reload').addEventListener('click',()=>load(true));$('geo').addEventListener('click',geolocate);$('fit').addEventListener('click',fit);els.date.addEventListener('change',()=>{if(state.mode==='guardia')load()});els.search.addEventListener('input',update);initializeMap();load();
-if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js?v=021').catch(()=>{});
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js?v=022').catch(()=>{});
 
 // Un cambio de fecha o del turno de 09:15 invalida la caché local.
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&state.mode==='guardia'&&els.date.value===todayISO()){const key=keyFor(state.mode,els.date.value);const cached=state.cache.get(key);if(cached&&cached.expires<=Date.now())load()}});

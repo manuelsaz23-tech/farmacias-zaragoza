@@ -31,3 +31,11 @@ Aún no se dispone de una prueba real de CORS desde GitHub Pages. No hay publica
 
 ## Corrección v0.2.1 (23/11/2026)
 Se corrige la excepción JavaScript `incompleto is not defined` en el adaptador REST. Se renueva la caché de archivos de la PWA. Este defecto NO demuestra un fallo CORS; validar con `diagnostico-cors.html` publicado. La v0.1.3 local permanece como baseline aceptada.
+
+## Corrección v0.2.2 — directorio Todas
+- Incidencia: «Todas» mostraba las farmacias de guardia (7) porque el cliente omitía el parámetro `tipo`.
+- Se envía `tipo=todas` de forma explícita, conforme a la interfaz municipal.
+- La paginación continúa mientras `totalCount` indique que quedan registros, incluso cuando el servidor limite cada página por debajo de 200.
+- Si «Todas» devuelve menos de 50 farmacias, o el número de resultados no alcanza `totalCount`, se presenta un error de integridad y nunca se comunica que la lista es completa. El umbral 50 es solo una alarma técnica, no una cifra oficial.
+- Se renueva el caché del service worker (`v0.2.2`) para no reutilizar scripts de v0.2.1.
+- Mantener v0.1.3 local como baseline aceptada. Validar v0.2.2 en GitHub Pages: Guardia, Horario ampliado, Todas, mapa y recarga forzada.
