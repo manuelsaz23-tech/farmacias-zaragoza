@@ -27,3 +27,7 @@ Solo tras validar la API desde la URL pública: abre la URL HTTPS en Chrome o Ed
 
 ## Evidencia pendiente
 Aún no se dispone de una prueba real de CORS desde GitHub Pages. No hay publicación automática en la cuenta del usuario.
+
+
+## Corrección v0.2.1 (23/11/2026)
+Se corrige la excepción JavaScript `incompleto is not defined` en el adaptador REST. Se renueva la caché de archivos de la PWA. Este defecto NO demuestra un fallo CORS; validar con `diagnostico-cors.html` publicado. La v0.1.3 local permanece como baseline aceptada.

@@ -91,7 +91,7 @@ async function municipalFetch(mode,date){
   if(chunk.length<200)break;
  }
  const incomplete=pages>=10||(total!==null&&all.length<total);
- return {origen:MUNICIPAL,fecha_consulta:new Date().toISOString(),datos:all,diagnostico:{paginas:pages,registros:all.length,total_origen:total,incompleto,duracion_fuente_ms:Math.round(performance.now()-began)},cache:{origen:'red',edad_segundos:0}};
+ return {origen:MUNICIPAL,fecha_consulta:new Date().toISOString(),datos:all,diagnostico:{paginas:pages,registros:all.length,total_origen:total,incompleto:incomplete,duracion_fuente_ms:Math.round(performance.now()-began)},cache:{origen:'red',edad_segundos:0}};
 }
 
 function keyFor(mode,date){return mode+'|'+(mode==='guardia'?date:'')}
@@ -129,7 +129,7 @@ function setMode(mode){state.mode=mode;document.querySelectorAll('[data-mode]').
 function initializeMap(){if(typeof L==='undefined'){$('map').innerHTML='<p class="empty">No se pudo cargar Leaflet. La lista, teléfonos y enlaces de navegación seguirán disponibles. Comprueba la conexión a Internet.</p>';$('mapstatus').textContent='Mapa no disponible';return}state.map=L.map('map',{zoomControl:true}).setView([41.6488,-0.8891],12);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(state.map);setTimeout(()=>state.map.invalidateSize(true),200);window.addEventListener('resize',()=>state.map.invalidateSize(true));}
 function geolocate(){if(!navigator.geolocation){setStatus('Este navegador no dispone de geolocalización.',true);return}setStatus('Solicitando permiso de ubicación…');navigator.geolocation.getCurrentPosition(p=>{state.position={lat:p.coords.latitude,lng:p.coords.longitude};if(state.map){if(state.userMarker)state.map.removeLayer(state.userMarker);state.userMarker=L.marker([state.position.lat,state.position.lng],{icon:L.divIcon({html:'<div class="user-pin"></div>',className:'',iconSize:[18,18]})}).addTo(state.map).bindPopup('Mi ubicación aproximada');}update();fit();setStatus('Ubicación obtenida. Resultados ordenados por distancia en línea recta; confirma horario antes de acudir.')},e=>setStatus('No se ha podido obtener la ubicación: '+e.message,true),{enableHighAccuracy:false,timeout:10000,maximumAge:300000})}
 els.date.value=todayISO();document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));$('hoy').addEventListener('click',()=>{els.date.value=todayISO();if(state.mode==='guardia')load()});$('reload').addEventListener('click',()=>load(true));$('geo').addEventListener('click',geolocate);$('fit').addEventListener('click',fit);els.date.addEventListener('change',()=>{if(state.mode==='guardia')load()});els.search.addEventListener('input',update);initializeMap();load();
-if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js?v=020').catch(()=>{});
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js?v=021').catch(()=>{});
 
 // Un cambio de fecha o del turno de 09:15 invalida la caché local.
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&state.mode==='guardia'&&els.date.value===todayISO()){const key=keyFor(state.mode,els.date.value);const cached=state.cache.get(key);if(cached&&cached.expires<=Date.now())load()}});
