@@ -1,0 +1,20 @@
+{
+  "name": "Farmacias de Guardia Zaragoza",
+  "short_name": "Farmacias ZGZ",
+  "description": "Farmacias de guardia según los datos publicados por el Ayuntamiento de Zaragoza",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f8f6",
+  "theme_color": "#146b51",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "scope": "./",
+  "id": "./"
+}
